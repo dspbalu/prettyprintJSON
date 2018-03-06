@@ -1,8 +1,12 @@
+package edyst;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -13,24 +17,63 @@ import org.json.simple.parser.*;
 public class Prettyprint 
 {
 	//let indent be with 5 spaces
-    static String indent="     ";
-    
+    static String indent="  ";
+   static ArrayList<String> place=new ArrayList<String>();
+   
  public static void main(String[] args) throws Exception 
  {
+	 Object obj=null;
 	 //read json file using json parser
-     Object obj = new JSONParser().parse(new FileReader("json.json"));
+	 if(args.length!=0) {
+		 obj = new JSONParser().parse(new FileReader(args[0]));
+	 System.out.println("cmd");
+	 }
+	 else
+     obj = new JSONParser().parse(new FileReader("src/edyst/json.json"));
       
      // typecasting obj to JSONObject
      JSONObject jo = (JSONObject) obj;
      //System.out.println(a);
-     
+     compact(jo);
      // print json object
      printobject(jo,"");
+     replace(args[0]);
  }
  
+ public static void replace(String file) throws Exception {
+ 	FileWriter fileWriter = new FileWriter(file);
+ 	for(String a:place) {
+ 		fileWriter.write(a+"\n");
+ 		
+ 	}
+ 	fileWriter.close();
+ }
+ 
+ public static void compact(JSONObject jo){
+ 	System.out.print("{");
+ 	Iterator<Map.Entry> itr1 = jo.entrySet().iterator();
+     while (itr1.hasNext()) {
+         Map.Entry pair = itr1.next();
+         if(jo.get(pair.getKey()).getClass().getName().equals("java.lang.String")) {
+        	 if(itr1.hasNext()) {
+        	 System.out.print("\""+pair.getKey()+"\": \""+pair.getValue()+"\",");
+        	 }
+        	 else
+        		 System.out.print("\""+pair.getKey()+"\": \""+pair.getValue()+"\"");
+         }
+         else {
+         	System.out.print("\""+pair.getKey()+"\":"+pair.getValue());
+         if(itr1.hasNext())
+         	System.out.print(",");
+     }
+     }
+     System.out.print("}");
+     System.out.println();
+ }
  //to print the json object
  public static void printobject(JSONObject jo,String ind){
-	 System.out.println(ind+"{");
+	 System.out.println("{");
+	 place.add(ind+"{");
      Iterator<Map.Entry> itr1 = jo.entrySet().iterator();
      while (itr1.hasNext()) {
          Map.Entry pair = itr1.next();
@@ -39,50 +82,72 @@ public class Prettyprint
          if(jo.get(pair.getKey()).getClass().getName().equals("org.json.simple.JSONObject"))
          { 
         	 System.out.print(indent+ind+ "\"" + pair.getKey() + "\"" + " : " );
-        	 System.out.println();
+        	 place.add(indent+ind+ "\"" + pair.getKey() + "\"" + " : ");
         	 printobject((JSONObject)jo.get(pair.getKey()),indent+ind);
-        	 if(itr1.hasNext())
+        	 if(itr1.hasNext()) {
+        		 String x=place.get(place.size()-1);
+        		place.set(place.size()-1,x+",");
         		 System.out.print(",");
+        	 }
          }
          
          //checking whether value is json array or not
          else if(jo.get(pair.getKey()).getClass().getName().equals("org.json.simple.JSONArray"))
          { 
         	 System.out.print(indent+ind+ "\"" + pair.getKey() + "\"" + " : " );
+        	 place.add(indent+ind+ "\"" + pair.getKey() + "\"" + " : ");
+        	 
         	 printArray((JSONArray)jo.get(pair.getKey()),ind+indent);
-        	 if(itr1.hasNext())
-        		 System.out.print(",");
+        	 if(itr1.hasNext()) {
+        		 String x=place.get(place.size()-1);
+         		place.set(place.size()-1,x+",");
+         		 System.out.print(",");
+         	 }
          }
          
         
          //if the value is boolean or integer or anything else i.e other array and json object 
          else {
-        	 if(itr1.hasNext())
-         System.out.print(indent+ind+"\""+pair.getKey() + "\" : " + pair.getValue()+",");
-        	 else
-        		 System.out.print(indent+ind+"\""+pair.getKey() + "\" : " + pair.getValue());		 
+        	 if(itr1.hasNext()) {
+         System.out.print(indent+ind+"\""+pair.getKey() + "\" : \"" + pair.getValue()+"\",");
+         place.add(indent+ind+"\""+pair.getKey() + "\" : \"" + pair.getValue()+"\",");
+        	 }
+        	 else {
+        		 System.out.print(indent+ind+"\""+pair.getKey() + "\" : \"" + pair.getValue()+"\"");
+        		 place.add(indent+ind+"\""+pair.getKey() + "\" : \"" + pair.getValue()+"\""); 
+        	 }
          }
          System.out.println();
      }
      System.out.print(ind+"}");
+     place.add(ind+"}");
  }
  public static void printArray(JSONArray jo,String ind){
 		System.out.print("[");
+		String x=place.get(place.size()-1);
+		place.set(place.size()-1,x+"[");
 		for(int i = 0 ; i < jo.size() ; i++){
 			System.out.println();
 			
 			//checking whether value is json object or not
 			if(jo.get(i).getClass().getName().equals("org.json.simple.JSONObject")){
+				System.out.print(ind+indent);
 				printobject((JSONObject) jo.get(i),ind+indent);
 			}
 			
 			//if the value is boolean or integer or anything else i.e other array and json object 
-			else
+			else {
 				System.out.print(ind+indent+"\""+jo.get(i) +"\"");
-			if(i != jo.size() - 1)
+				place.add(ind+indent+"\""+jo.get(i) +"\"");
+			}
+			if(i != jo.size() - 1) {
 				System.out.print(",");
+				x=place.get(place.size()-1);
+				place.set(place.size()-1,x+",");
+			}
 		}
 		System.out.println();
 		System.out.print(indent + "]");
+		place.add(indent+"]");
 	}
 }
