@@ -16,27 +16,46 @@ import org.json.simple.parser.*;
 
 public class Prettyprint 
 {
-	//let indent be with 5 spaces
+	//let indent be with 2 spaces
     static String indent="  ";
+    static boolean replace=false,compact=false;
    static ArrayList<String> place=new ArrayList<String>();
    
  public static void main(String[] args) throws Exception 
  {
-	 Object obj=null;
-	 //read json file using json parser
+	 Object obj=null;String file;
 	 if(args.length!=0) {
-		 obj = new JSONParser().parse(new FileReader(args[0]));
-	 System.out.println("cmd");
+		 for(int i=0;i<args.length;i++) {
+		 if(args[i].contains("--replace"))
+			 replace=true;
+		 if(args[i].contains("--compact"))
+			 compact=true;
+		 if(args[i].contains("--indent")){
+			int a=Integer.parseInt(args[i].substring(args[i].indexOf('=')+1, args[i].length()));
+			indent="";
+			for(int j=0;j<a;j++)
+				indent+=" ";
+		 }		 
+		 if(args[i].contains("--from-file")){
+			 file=args[i].substring(args[i].indexOf('=')+1, args[i].length());
+			 obj = new JSONParser().parse(new FileReader(file));
+		 }
+		 }
+	// System.out.println("cmd");
 	 }
-	 else
-     obj = new JSONParser().parse(new FileReader("src/edyst/json.json"));
+	 else {
+     System.out.println("please give path to read a file in command line");
+     System.exit(0);
+	 }
       
      // typecasting obj to JSONObject
      JSONObject jo = (JSONObject) obj;
      //System.out.println(a);
+     if(compact)
      compact(jo);
      // print json object
      printobject(jo,"");
+     if(replace)
      replace(args[0]);
  }
  
