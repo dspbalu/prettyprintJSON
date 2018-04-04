@@ -2,7 +2,7 @@
 
 In order to use json parser object first add json-simple-1.1.jar to your classpath
 
-Create a command line utility called PrettyJSON. Given a JSON document, pretty print it - either in-place
+It is a command line utility called PrettyJSON. Given a JSON document, pretty print it - either in-place
 or output to the console.
 Eg:
 
